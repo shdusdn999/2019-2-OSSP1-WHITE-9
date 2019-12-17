@@ -4,11 +4,11 @@ from pathlib import Path
 import cv2
 from model import get_model
 from noise_model import get_noise_model
-from imageai.Detection import ObjectDetection
 import os
 from PIL import Image
 import pytesseract
 pytesseract.pytesseract.tesseract_cmd = r'C:/Program Files/Tesseract-OCR/tesseract'
+
 
 
 def get_args(): #콘솔로부터 인자를 받아오는 함수
@@ -65,47 +65,20 @@ def main():
         out_image[:, w:w * 2] = noise_image
         out_image[:, w * 2:] = denoised_image
         #cv2.imwrite("denoised.jpg", out_image)
-        cv2.imwrite("noised.jpg", noise_image)
         cv2.imwrite("denoised.jpg", denoised_image) #denoised된 이미지를 기본경로에 저장
-        #경로 내에 존재하는 denoised.jpg파일을 tesseract로 불러옴
-        #data = pytesseract.image_to_string(Image.open('denoised.jpg'), lang='eng')
-        #불러온 image 내의 문자열을 data 변수에 string으로 입력
-        #f = open("result.txt", 'w', encoding='UTF8')
-        #f.write(data)   #result.txt파일 안에 해당 string을 저장하고 기본 경로에 저장.
-        #f.close()
-
         #img = cv2.imread(execution_path, "denoised.jpg")
+        #경로 내에 존재하는 denoised.jpg파일을 tesseract로 불러옴
+        data = pytesseract.image_to_string(Image.open('denoised.jpg'), lang='eng')
+        #불러온 image 내의 문자열을 data 변수에 string으로 입력
+        f = open("result.txt", 'w', encoding='UTF8')
+        f.write(data)   #result.txt파일 안에 해당 string을 저장하고 기본 경로에 저장.
+        f.close()
+
         
         if args.output_dir: #output_path를 입력받았다면 그 경로에 저장
             cv2.imwrite("denoised.png", out_image)
-        else:
+        #else:
             #cv2.imshow("result", out_image)
-
-            detector = ObjectDetection()    #Object Detection을 하기 위해 ObjectDetection()호출
-            detector.setModelTypeAsRetinaNet() 
-            detector.setModelPath( os.path.join(execution_path , "resnet50_coco_best_v2.0.1.h5"))
-            detector.loadModel()
-            #denoised이미지를 불러와 object detection 시킨 이미지를 detectedImage.jpg로 저장함
-            detections = detector.detectObjectsFromImage(input_image=os.path.join(execution_path , "denoised.jpg"), output_image_path=os.path.join(execution_path , "detectedImage.jpg"))
-
-            for eachObject in detections:
-                # 콘솔 창에도 인식된 물체의 이름과 정확도를 출력시킴
-                print(eachObject["name"] , " : " , eachObject["percentage_probability"] )
-            
-            #detectedImage를 imread로 새로운 창에 띄우기 위한 과정
-            img = cv2.imread('detectedImage.jpg', cv2.IMREAD_UNCHANGED)
-            #resized_img = cv2.resize(img, (680, 680))
-            #result라는 이름의 윈도우 창으로 화면에 띄움
-            cv2.namedWindow("result", cv2.WINDOW_NORMAL)
-            cv2.resizeWindow("result", 680,680)
-            cv2.imshow('result', img)
-            
-            print ("Press q if your works are done")
-            key = cv2.waitKey(-1)
-            # "q": quit
-            if key == 113:
-                return 0
-
 
 if __name__ == '__main__':
     main()
